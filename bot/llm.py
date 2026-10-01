@@ -64,13 +64,15 @@ def _chat(messages: list[dict], temperature: float = 0.4) -> dict:
     raise RuntimeError(" | ".join(errors) or "Kein LLM-Anbieter konfiguriert")
 
 
-def _profile_text(p: dict) -> str:
-    stufen = "\n".join(f"- {s['name']}: {s['preis']} ({s['leistung']})" for s in p["pakete"])
+def _profile_text(p: dict, pakete: bool = True) -> str:
     erfolge = "\n".join(f"- {e}" for e in p["erfolge"])
-    return (f"Verein: {p['verein']}\nTeam: {p['team_beschreibung']}\n"
+    text = (f"Verein: {p['verein']}\nTeam: {p['team_beschreibung']}\n"
             f"Erfolge:\n{erfolge}\nReichweite/Kanäle: {p['kanaele']}\n"
-            f"Sponsoring-Pakete (Saison ca. 6 Monate):\n{stufen}\n"
             f"Region: {p['region']}")
+    if pakete:
+        stufen = "\n".join(f"- {s['name']}: {s['preis']} ({s['leistung']})" for s in p["pakete"])
+        text += f"\nSponsoring-Pakete (Saison ca. 6 Monate):\n{stufen}"
+    return text
 
 
 def qualify(company: dict, profile: dict) -> dict:
@@ -106,34 +108,36 @@ def _clean(text: str) -> str:
 
 
 def write_mail(company: dict, qual: dict, profile: dict) -> dict:
-    """-> {'betreff': str, 'text': str}"""
-    herkunft = ""
-    if company["source"] == "sponsor_von_team":
-        herkunft = (f"Das Unternehmen unterstützt bereits das Esports-Team "
-                    f"'{company.get('source_detail')}'. Erwähne das kurz und wertschätzend, "
-                    f"ohne das andere Team schlecht zu machen.")
-    elif company["source"] == "lokal":
-        herkunft = "Betone die regionale Verbundenheit (Rhein-Main / Aschaffenburg)."
+    """Allgemeine Partnerschaftsanfrage. -> {'betreff': str, 'text': str}
 
-    sys = ("Du schreibst im Namen eines Vereins kurze, persönliche Sponsoring-Anfragen auf Deutsch. "
-           "Klingt wie von einem Menschen geschrieben, locker aber seriös, Sie-Form. "
+    Bewusst allgemein: keine Annahmen darüber, was die Firma macht oder will,
+    keine Pakete/Preise. Details gibt es erst, wenn die Firma Interesse zeigt.
+    """
+    region = ""
+    if company["source"] == "lokal":
+        region = "Das Unternehmen sitzt in unserer Region, erwähne kurz, dass wir ebenfalls aus der Region kommen."
+
+    sys = ("Du schreibst im Namen eines Vereins kurze, allgemeine Anfragen für eine Partnerschaft bzw. "
+           "ein Sponsoring auf Deutsch. Klingt wie von einem Menschen geschrieben, freundlich und seriös, Sie-Form. "
            "Niemals Gedankenstriche verwenden. Keine Floskeln wie 'Ich hoffe, diese Mail erreicht Sie gut'. "
-           "Keine erfundenen Fakten, keine Zahlen außer den gegebenen. Antworte nur als JSON.")
-    user = f"""{_profile_text(profile)}
+           "Erfinde nichts über das Unternehmen: keine Vermutungen, was es anbietet, plant oder sich wünscht, "
+           "keine Ideen für gemeinsame Projekte, keine Branchenbezüge. Keine Preise, keine Pakete, keine Zahlen "
+           "außer den gegebenen Erfolgen. Antworte nur als JSON.")
+    user = f"""{_profile_text(profile, pakete=False)}
 
-Empfänger: {qual.get('firmenname') or company['domain']} ({qual.get('branche', '')})
-Aufhänger: {qual.get('aufhaenger') or '-'}
-{herkunft}
+Empfänger: {qual.get('firmenname') or company['domain']}
+{region}
 
-Schreibe eine Mail (120 bis 180 Wörter) mit Bitte um Trikot- bzw. Teamsponsoring.
-Aufbau: kurze Vorstellung des Teams mit einem Erfolg, warum genau dieses Unternehmen passt,
-Pakete kurz nennen (Name und Preis, eine Zeile je Paket), Hinweis dass auch individuelle Absprachen möglich sind,
-Bitte um kurze Rückmeldung per Mail. {profile.get('mail_zusatz', '')}
-Anrede: "Sehr geehrte Damen und Herren" falls kein Name bekannt.
+Schreibe eine allgemeine Anfrage (90 bis 140 Wörter), ob das Unternehmen sich grundsätzlich eine
+Partnerschaft bzw. ein Sponsoring unseres CS2-Teams vorstellen kann, zum Beispiel als Trikotsponsor.
+Aufbau: wer wir sind (kurz, mit einem Erfolg), dass wir Partner für die kommende Saison suchen,
+dass es verschiedene Möglichkeiten gibt und wir gerne Details schicken, wenn Interesse besteht,
+Bitte um kurze Rückmeldung per Mail. Kein Telefonat und kein Treffen vorschlagen. {profile.get('mail_zusatz', '')}
+Anrede: "Sehr geehrte Damen und Herren".
 Grußformel und Signatur NICHT schreiben, die wird automatisch angehängt.
-JSON-Felder: betreff (max 70 Zeichen, konkret, kein Clickbait), text."""
-    data = _chat([{"role": "system", "content": sys}, {"role": "user", "content": user}], 0.6)
+JSON-Felder: betreff (max 60 Zeichen, schlicht, z.B. "Partnerschaftsanfrage Steckster Gadde CS2"), text."""
+    data = _chat([{"role": "system", "content": sys}, {"role": "user", "content": user}], 0.5)
     body = _clean(data.get("text", ""))
     body += "\n\n" + profile["signatur"].strip()
     body += "\n\n" + profile["abmelde_hinweis"].strip()
-    return {"betreff": _clean(data.get("betreff", "Sponsoring-Anfrage Steckster Gadde")), "text": body}
+    return {"betreff": _clean(data.get("betreff") or "Partnerschaftsanfrage Steckster Gadde"), "text": body}

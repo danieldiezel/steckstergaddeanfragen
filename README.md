@@ -11,7 +11,7 @@ Sucht selbstständig nach möglichen Trikot- und Teamsponsoren für das Steckste
    - Branchen, die zu Esports passen (Peripherie, Energy, Hosting, ...)
 2. **Anreichern**: Website + Impressum besuchen, beste Mailadresse wählen (sponsoring@ > marketing@ > info@ ...)
 3. **Bewerten**: Die KI (Groq, Mistral als Ersatz) gibt einen Fit-Score 1 bis 10. Ab `MIN_FIT_SCORE` (Standard 6) kommt die Firma in die Warteschlange
-4. **Schreiben und Senden**: individuelle Mail je Firma, Sponsoren anderer Teams werden darauf angesprochen, lokale Firmen auf die Region. Keine Gedankenstriche, Signatur und Abmeldehinweis automatisch
+4. **Schreiben und Senden**: allgemeine Partnerschaftsanfrage ohne Pakete und Preise, Details erst bei Interesse. Lokale Firmen werden auf die Region angesprochen. Keine Gedankenstriche, Signatur und Abmeldehinweis automatisch
 5. **Antworten**: prüft alle 30 min das Postfach. Antworten kommen als Telegram-Nachricht, "Abmelden"/"kein Interesse" landet automatisch auf der Sperrliste
 
 Keine Firma und keine Adresse wird zweimal angeschrieben.
