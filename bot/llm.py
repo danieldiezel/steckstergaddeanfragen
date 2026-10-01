@@ -139,5 +139,6 @@ JSON-Felder: betreff (max 60 Zeichen, schlicht, z.B. "Partnerschaftsanfrage Stec
     data = _chat([{"role": "system", "content": sys}, {"role": "user", "content": user}], 0.5)
     body = _clean(data.get("text", ""))
     body += "\n\n" + profile["signatur"].strip()
-    body += "\n\n" + profile["abmelde_hinweis"].strip()
+    if profile.get("abmelde_hinweis", "").strip():
+        body += "\n\n" + profile["abmelde_hinweis"].strip()
     return {"betreff": _clean(data.get("betreff") or "Partnerschaftsanfrage Steckster Gadde"), "text": body}
