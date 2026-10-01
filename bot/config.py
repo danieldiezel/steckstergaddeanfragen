@@ -76,29 +76,3 @@ TIMEZONE = env("TIMEZONE", "Europe/Berlin")
 def load_profile() -> dict:
     with open(BASE_DIR / "profil.json", encoding="utf-8") as f:
         return json.load(f)
-
-
-# Werte, die das Dashboard zur Laufzeit überschreiben darf (state-Tabelle, Schlüssel cfg_<NAME>)
-OVERRIDABLE = {
-    "DAILY_LIMIT": int, "MIN_FIT_SCORE": int, "SEND_START_HOUR": int,
-    "SEND_END_HOUR": int, "SEND_WEEKDAYS_ONLY": lambda v: v in ("1", "true"),
-    "DRY_RUN": lambda v: v in ("1", "true"),
-}
-
-
-def apply_overrides(get_state) -> list[str]:
-    """Übernimmt Dashboard-Einstellungen. Gibt die geänderten Namen zurück."""
-    changed = []
-    g = globals()
-    for name, conv in OVERRIDABLE.items():
-        raw = get_state(f"cfg_{name}")
-        if raw is None:
-            continue
-        try:
-            val = conv(str(raw).lower())
-        except ValueError:
-            continue
-        if g[name] != val:
-            g[name] = val
-            changed.append(name)
-    return changed
