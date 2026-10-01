@@ -10,7 +10,7 @@ Sucht selbstständig nach möglichen Trikot- und Teamsponsoren für das Steckste
    - Lokale Firmen Rhein-Main per Suche
    - Branchen, die zu Esports passen (Peripherie, Energy, Hosting, ...)
 2. **Anreichern**: Website + Impressum besuchen, beste Mailadresse wählen (sponsoring@ > marketing@ > info@ ...)
-3. **Bewerten**: Mistral gibt einen Fit-Score 1 bis 10. Ab `MIN_FIT_SCORE` (Standard 6) kommt die Firma in die Warteschlange
+3. **Bewerten**: Die KI (Groq, Mistral als Ersatz) gibt einen Fit-Score 1 bis 10. Ab `MIN_FIT_SCORE` (Standard 6) kommt die Firma in die Warteschlange
 4. **Schreiben und Senden**: individuelle Mail je Firma, Sponsoren anderer Teams werden darauf angesprochen, lokale Firmen auf die Region. Keine Gedankenstriche, Signatur und Abmeldehinweis automatisch
 5. **Antworten**: prüft alle 30 min das Postfach. Antworten kommen als Telegram-Nachricht, "Abmelden"/"kein Interesse" landet automatisch auf der Sperrliste
 
@@ -53,4 +53,4 @@ sudo systemctl enable --now steckster-sponsor
 
 - Absender ist `verwaltung@steckstergadde.de` im Namen von Jonas Weber (Teammanagement & Sponsoring). Der Bot liest das Postfach nur lesend, um Antworten zu erkennen. SPF/DKIM bei IONOS für die Domain prüfen, damit die Mails nicht im Spam landen.
 - Rechtlich: Unaufgeforderte Werbemails sind in Deutschland auch an Firmen nach § 7 UWG grundsätzlich einwilligungspflichtig. Individuelle, passgenaue Anfragen an Firmenpostfächer mit Abmeldemöglichkeit halten das Risiko klein, ganz weg ist es nicht. Deshalb auch das moderate Tageslimit.
-- Alles läuft kostenlos: DuckDuckGo-Suche ohne Key, Mistral Free-Tier.
+- Alles läuft kostenlos: DuckDuckGo-Suche ohne Key, Groq Free-Tier (Mistral als Ersatz). KI testen: `venv/bin/python test_llm.py`

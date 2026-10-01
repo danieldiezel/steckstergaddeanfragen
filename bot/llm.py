@@ -1,5 +1,6 @@
-"""Mistral: Firmen bewerten und individuelle Sponsoring-Mails schreiben."""
+"""LLM (Groq oder Mistral): Firmen bewerten und individuelle Sponsoring-Mails schreiben."""
 import json
+import logging
 import re
 import time
 
@@ -7,27 +8,59 @@ import requests
 
 from . import config
 
-API_URL = "https://api.mistral.ai/v1/chat/completions"
+log = logging.getLogger("llm")
+
+PROVIDERS = {
+    "groq": ("https://api.groq.com/openai/v1/chat/completions",
+             lambda: config.GROQ_API_KEY, lambda: config.GROQ_MODEL),
+    "mistral": ("https://api.mistral.ai/v1/chat/completions",
+                lambda: config.MISTRAL_API_KEY, lambda: config.MISTRAL_MODEL),
+}
+
+
+def _parse_json(text: str) -> dict:
+    try:
+        return json.loads(text)
+    except json.JSONDecodeError:
+        m = re.search(r"\{.*\}", text, re.S)  # JSON aus Fließtext/Codeblock holen
+        if m:
+            return json.loads(m.group(0))
+        raise
+
+
+def _call(provider: str, messages: list[dict], temperature: float) -> dict:
+    url, key_fn, model_fn = PROVIDERS[provider]
+    key = key_fn()
+    if not key:
+        raise RuntimeError(f"API-Key für {provider} fehlt in .env")
+    payload = {"model": model_fn(), "messages": messages, "temperature": temperature,
+               "response_format": {"type": "json_object"}}
+    for attempt in range(4):
+        r = requests.post(url, headers={"Authorization": f"Bearer {key}"}, json=payload, timeout=60)
+        if r.status_code == 429:  # Free-Tier-Limit: kurz warten
+            wait = float(r.headers.get("retry-after", 20 * (attempt + 1)))
+            time.sleep(min(wait, 120))
+            continue
+        if r.status_code == 400 and "response_format" in payload and "json" in r.text.lower():
+            payload.pop("response_format")  # Modell kann keinen JSON-Modus: ohne versuchen
+            continue
+        if r.status_code >= 400:
+            raise RuntimeError(f"{provider}-Fehler {r.status_code}: {r.text[:300]}")
+        return _parse_json(r.json()["choices"][0]["message"]["content"])
+    raise RuntimeError(f"{provider}: Rate-Limit")
 
 
 def _chat(messages: list[dict], temperature: float = 0.4) -> dict:
-    if not config.MISTRAL_API_KEY:
-        raise RuntimeError("MISTRAL_API_KEY fehlt in .env")
-    for attempt in range(4):
-        r = requests.post(
-            API_URL,
-            headers={"Authorization": f"Bearer {config.MISTRAL_API_KEY}"},
-            json={"model": config.MISTRAL_MODEL, "messages": messages,
-                  "temperature": temperature, "response_format": {"type": "json_object"}},
-            timeout=60,
-        )
-        if r.status_code == 429:  # Free-Tier-Limit: kurz warten
-            time.sleep(20 * (attempt + 1))
-            continue
-        if r.status_code >= 400:
-            raise RuntimeError(f"Mistral-Fehler {r.status_code}: {r.text[:300]}")
-        return json.loads(r.json()["choices"][0]["message"]["content"])
-    raise RuntimeError("Mistral Rate-Limit")
+    """Probiert die Anbieter der Reihe nach (LLM_PROVIDER, dann Fallback)."""
+    order = [p.strip() for p in config.LLM_PROVIDER.split(",") if p.strip() in PROVIDERS]
+    errors = []
+    for provider in order:
+        try:
+            return _call(provider, messages, temperature)
+        except Exception as e:
+            log.warning("%s fehlgeschlagen: %s", provider, e)
+            errors.append(str(e))
+    raise RuntimeError(" | ".join(errors) or "Kein LLM-Anbieter konfiguriert")
 
 
 def _profile_text(p: dict) -> str:

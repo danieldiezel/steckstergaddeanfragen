@@ -35,7 +35,11 @@ def env_bool(key: str, default: bool = False) -> bool:
     return env(key, "1" if default else "0").lower() in ("1", "true", "yes", "ja", "on")
 
 
-# --- LLM (Mistral, kostenloser Tier reicht) ---
+# --- LLM ---
+# Reihenfolge der Anbieter, der zweite springt ein, wenn der erste ausfällt
+LLM_PROVIDER = env("LLM_PROVIDER", "groq,mistral")
+GROQ_API_KEY = env("GROQ_API_KEY")
+GROQ_MODEL = env("GROQ_MODEL", "llama-3.3-70b-versatile")
 MISTRAL_API_KEY = env("MISTRAL_API_KEY")
 MISTRAL_MODEL = env("MISTRAL_MODEL", "mistral-small-latest")
 
