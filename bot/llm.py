@@ -11,7 +11,7 @@ from . import config
 log = logging.getLogger("llm")
 
 PROVIDERS = {
-    "groq": ("https://api.groq.com/openai/v1/chat/completions",
+    "groq": (None,
              lambda: config.GROQ_API_KEY, lambda: config.GROQ_MODEL),
     "mistral": ("https://api.mistral.ai/v1/chat/completions",
                 lambda: config.MISTRAL_API_KEY, lambda: config.MISTRAL_MODEL),
@@ -30,6 +30,7 @@ def _parse_json(text: str) -> dict:
 
 def _call(provider: str, messages: list[dict], temperature: float) -> dict:
     url, key_fn, model_fn = PROVIDERS[provider]
+    url = url or f"{config.GROQ_BASE_URL}/chat/completions"
     key = key_fn()
     if not key:
         raise RuntimeError(f"API-Key für {provider} fehlt in .env")

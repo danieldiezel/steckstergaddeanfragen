@@ -2,6 +2,7 @@
 from bot import config, llm
 
 print("Reihenfolge:", config.LLM_PROVIDER)
+print("Groq-Modell:", config.GROQ_MODEL, "| URL:", config.GROQ_BASE_URL)
 for name in llm.PROVIDERS:
     key = llm.PROVIDERS[name][1]()
     if not key:

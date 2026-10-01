@@ -38,8 +38,11 @@ def env_bool(key: str, default: bool = False) -> bool:
 # --- LLM ---
 # Reihenfolge der Anbieter, der zweite springt ein, wenn der erste ausfällt
 LLM_PROVIDER = env("LLM_PROVIDER", "groq,mistral")
-GROQ_API_KEY = env("GROQ_API_KEY")
-GROQ_MODEL = env("GROQ_MODEL", "llama-3.3-70b-versatile")
+# LLM2_* wird auch akzeptiert (gleiche Namen wie im MGT_Anfragen-Bot)
+GROQ_API_KEY = env("GROQ_API_KEY") or env("LLM2_API_KEY")
+GROQ_MODEL = env("GROQ_MODEL") or env("LLM2_MODEL") or "llama-3.3-70b-versatile"
+GROQ_BASE_URL = (env("GROQ_BASE_URL") or env("LLM2_BASE_URL")
+                 or "https://api.groq.com/openai/v1").rstrip("/")
 MISTRAL_API_KEY = env("MISTRAL_API_KEY")
 MISTRAL_MODEL = env("MISTRAL_MODEL", "mistral-small-latest")
 
