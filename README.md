@@ -1,0 +1,80 @@
+{
+  "verein": "Steckster Gadde, Verein aus Aschaffenburg",
+  "team_beschreibung": "CS2-Team, gegründet 2022, spielt in der DACH CS Liga (aktuell DACH CS Masters Liga 8) mit dem Ziel, in die oberen Ligen aufzusteigen.",
+  "erfolge": [
+    "1. Platz DACH CS Masters Saison 5 (2026)",
+    "1. Platz CS Wingman Turnier (2024)"
+  ],
+  "kanaele": "HIER EINTRAGEN, z.B. Instagram @..., Twitch-Kanal, Website steckstergadde.de",
+  "region": "Rhein-Main, Aschaffenburg",
+  "pakete": [
+    {
+      "name": "Unterstützer",
+      "preis": "40 € pro Saison",
+      "leistung": "Nennung auf Website und Social Media"
+    },
+    {
+      "name": "Bronze",
+      "preis": "150 € pro Saison",
+      "leistung": "Logo auf Website und Social Media"
+    },
+    {
+      "name": "Silber",
+      "preis": "350 € pro Saison",
+      "leistung": "Logo auf dem Trikot plus Website und Social Media"
+    },
+    {
+      "name": "Gold",
+      "preis": "850 € pro Saison",
+      "leistung": "Hauptlogo auf dem Trikot, prominente Platzierung auf allen Kanälen"
+    }
+  ],
+  "mail_zusatz": "",
+  "signatur": "Viele Grüße\nJonas Weber\nTeammanagement & Sponsoring\nSteckster Gadde\nverwaltung@steckstergadde.de\nwww.steckstergadde.de",
+  "abmelde_hinweis": "Falls Sie keine weiteren Nachrichten von uns wünschen, antworten Sie einfach kurz mit \"Abmelden\".",
+  "liga_urls": [
+    "https://dachcs.de/"
+  ],
+  "suche_esports_teams": [
+    "Esports Team Deutschland Partner Sponsoren CS2",
+    "Counter-Strike Team DACH Sponsoren",
+    "Esport Verein e.V. Sponsoren Partner",
+    "Amateur Esports Team Sponsoren Deutschland",
+    "Esports Team Hessen Partner",
+    "Esports Team Bayern Sponsoren",
+    "Gaming Verein Sponsoren Trikot"
+  ],
+  "suche_lokal": [
+    "PC Händler Aschaffenburg",
+    "Computer Reparatur Aschaffenburg",
+    "IT Dienstleister Aschaffenburg",
+    "IT Systemhaus Frankfurt am Main Mittelstand",
+    "Gaming Bar Frankfurt",
+    "Pizzeria Lieferdienst Aschaffenburg",
+    "Fitnessstudio Aschaffenburg",
+    "Druckerei Textildruck Aschaffenburg",
+    "Autohaus Aschaffenburg",
+    "Handyladen Aschaffenburg",
+    "Webdesign Agentur Aschaffenburg",
+    "Getränkehandel Aschaffenburg",
+    "Softwarefirma Darmstadt",
+    "Internetanbieter Glasfaser Rhein-Main",
+    "Elektronikfachhandel Hanau",
+    "Steuerberater Aschaffenburg junge Kanzlei",
+    "Barbershop Aschaffenburg",
+    "Burger Restaurant Aschaffenburg"
+  ],
+  "suche_branchen": [
+    "Gaming Peripherie Hersteller Deutschland Sponsoring",
+    "Energy Drink Start-up Deutschland Esports",
+    "Gaming Stuhl Hersteller Deutschland",
+    "Custom PC Builder Deutschland Esports Partner",
+    "Mauspad Hersteller Deutschland",
+    "Esports Trikot Hersteller Deutschland",
+    "VPN Anbieter Esports Sponsoring",
+    "Nahrungsergänzung Gaming Deutschland",
+    "Gaming Server Hosting Anbieter Deutschland",
+    "Streaming Equipment Shop Deutschland"
+  ],
+  "ansprechpartner": "Jonas Weber, Teammanagement & Sponsoring"
+}

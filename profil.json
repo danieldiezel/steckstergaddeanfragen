@@ -1,0 +1,31 @@
+# Kopieren nach .env und ausfüllen
+
+# Mistral (kostenloser Tier auf console.mistral.ai)
+MISTRAL_API_KEY=
+MISTRAL_MODEL=mistral-small-latest
+
+# Absender-Postfach (IONOS)
+SMTP_HOST=smtp.ionos.de
+SMTP_PORT=587
+SMTP_USER=verwaltung@steckstergadde.de
+SMTP_PASS=
+MAIL_FROM=verwaltung@steckstergadde.de
+MAIL_FROM_NAME=Jonas Weber | Steckster Gadde
+MAIL_BCC=
+IMAP_ENABLED=1
+IMAP_HOST=imap.ionos.de
+IMAP_SENT_FOLDER=Gesendete Objekte
+
+# Telegram (eigener Bot über @BotFather, Chat-ID z.B. über @userinfobot)
+TELEGRAM_TOKEN=
+TELEGRAM_CHAT_ID=
+
+# Ablauf
+DAILY_LIMIT=10
+SEND_START_HOUR=9
+SEND_END_HOUR=17
+SEND_WEEKDAYS_ONLY=1
+MIN_FIT_SCORE=6
+# 1 = Mails nur als Vorschau in Telegram, nichts wird verschickt. Nach dem Testen auf 0.
+DRY_RUN=1
+TIMEZONE=Europe/Berlin
