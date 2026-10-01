@@ -19,7 +19,8 @@ Keine Firma und keine Adresse wird zweimal angeschrieben.
 ## Einrichtung (Raspberry Pi)
 
 ```bash
-cd ~/steckster_sponsor_bot
+git clone https://github.com/danieldiezel/steckstergaddeanfragen.git ~/steckstergaddeanfragen
+cd ~/steckstergaddeanfragen
 python3 -m venv venv && venv/bin/pip install -r requirements.txt
 cp .env.example .env && nano .env        # Keys, Postfach, Telegram
 nano profil.json                          # Kanäle, Paketleistungen, Liga-URLs prüfen!

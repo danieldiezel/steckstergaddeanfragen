@@ -6,8 +6,8 @@ Wants=network-online.target
 [Service]
 Type=simple
 User=pi
-WorkingDirectory=/home/pi/steckster_sponsor_bot
-ExecStart=/home/pi/steckster_sponsor_bot/venv/bin/python -m bot.main
+WorkingDirectory=/home/pi/steckstergaddeanfragen
+ExecStart=/home/pi/steckstergaddeanfragen/venv/bin/python -m bot.main
 Restart=always
 RestartSec=30
 
