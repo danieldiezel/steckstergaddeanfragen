@@ -35,8 +35,11 @@ def _add(url: str, label: str, source: str, detail: str) -> bool:
                           source=source, source_detail=detail)
 
 
-def sponsors_of_team(team_url: str, team_name: str) -> int:
-    """Liest die Partner-/Sponsorenseite einer Team-Website aus."""
+def sponsors_of_team(team_url: str, team_name: str, fallback: bool = False) -> int:
+    """Liest die Partner-/Sponsorenseite einer Team-Website aus.
+
+    fallback=True: ohne Partnerseite auch Links der Startseite nehmen (nur bei sicheren Teamseiten).
+    """
     if db.team_scanned(team_url):
         return 0
     db.mark_team(team_url, team_name)
@@ -50,7 +53,7 @@ def sponsors_of_team(team_url: str, team_name: str) -> int:
         r = scrape.fetch(p)
         if r:
             candidates += scrape.external_company_links(r[0], r[1])
-    if not pages:  # keine Partnerseite: Footer/Startseite nehmen, LLM filtert später
+    if not pages and fallback:  # keine Partnerseite: Footer/Startseite, LLM filtert später
         candidates = scrape.external_company_links(final, html)
     new = 0
     for url, label in candidates[:25]:
@@ -60,30 +63,47 @@ def sponsors_of_team(team_url: str, team_name: str) -> int:
 
 
 # ---------- 1. DACH CS Liga ----------
+NEWS_HINTS = ("news", "artikel", "magazin", "zeitung", "blog", "wiki", "transfer", "forum")
+
+
+def _dachcs_team_name(html: str) -> str:
+    s = scrape.soup_of(html)
+    h = s.find(["h1", "h2"])
+    name = h.get_text(" ", strip=True) if h else scrape.page_title(html)
+    for sep in (" | ", " - ", " – "):
+        name = name.split(sep)[0]
+    return name.strip()
+
+
 def discover_dachcs(profile: dict, max_teams: int = 4) -> int:
+    """Teamnamen aus DACH CS (Ranking/Coverage), dann Team-Website per Suche finden."""
     team_links = []
     for liga_url in profile.get("liga_urls", []):
         res = scrape.fetch(liga_url)
         if not res:
             continue
-        for url, label in scrape.links(res[0], res[1]):
-            if "dachcs.de" in url and "/team" in url.lower() and (url, label) not in team_links:
-                team_links.append((url, label))
+        for url, _ in scrape.links(res[0], res[1]):
+            if "dachcs.de" in url and "/team/" in url.lower() and url not in team_links:
+                team_links.append(url)
+    log.info("DACH CS: %d Teamseiten gefunden", len(team_links))
+    own = profile.get("eigener_teamname", "steckster").lower()
     new = 0
-    for team_page, team_name in _rotate("dachcs_teams", team_links, max_teams):
+    for team_page in _rotate("dachcs_teams", team_links, max_teams):
         if db.team_scanned(team_page):
             continue
-        db.mark_team(team_page, team_name)
         res = scrape.fetch(team_page)
         if not res:
             continue
-        # externe Links auf der Teamseite = meist die Team-Website
-        for site, _ in scrape.external_company_links(res[0], res[1])[:2]:
-            new += sponsors_of_team(site, team_name)
-        # zusätzlich suchen, falls das Team seine Sponsoren nur auf Socials zeigt
-        for r in search(f'"{team_name}" CS2 Sponsor Partner', 5):
-            if r["href"] and not scrape.is_ignored(r["href"]):
-                new += sponsors_of_team(r["href"], team_name)
+        name = _dachcs_team_name(res[1])
+        db.mark_team(team_page, name)
+        if not name or own in name.lower():
+            continue
+        for r in search(f'"{name}" CS2 Team Sponsoren Partner', 6):
+            url, title = r["href"], r["title"].lower()
+            if not url or scrape.is_ignored(url) or any(w in url.lower() for w in NEWS_HINTS):
+                continue
+            if name.lower().split()[0] in (title + url.lower()):  # Treffer gehört zum Team
+                new += sponsors_of_team(f"https://{urlparse(url).netloc}", name, fallback=True)
                 break
     return new
 
@@ -94,7 +114,8 @@ def discover_esports_teams(profile: dict, max_queries: int = 2) -> int:
     for q in _rotate("esports_q", profile.get("suche_esports_teams", []), max_queries):
         for r in search(q, 8):
             url = r["href"]
-            if url and not scrape.is_ignored(url):
+            if url and not scrape.is_ignored(url) and not any(w in url.lower() for w in NEWS_HINTS):
+                # nur Seiten mit echter Partner-/Sponsorenseite, keine Artikel
                 new += sponsors_of_team(f"https://{urlparse(url).netloc}", r["title"][:80])
     return new
 

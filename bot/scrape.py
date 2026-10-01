@@ -25,6 +25,12 @@ IGNORE_DOMAINS = {
     "bit.ly", "linktr.ee", "vimeo.com", "pinterest.com", "whatsapp.com", "t.me",
     "amazon.de", "amazon.com", "ebay.de", "streamlabs.com", "streamelements.com",
     "cookiebot.com", "usercentrics.eu", "matomo.org", "w3.org", "schema.org",
+    "scl.gg", "mastodon.social", "bsky.app", "threads.net", "kick.com", "trovo.live",
+    "gamertransfer.com", "sport.de", "kicker.de", "spiegel.de", "bild.de", "t-online.de",
+    "esports.com", "dotesports.com", "dexerto.com", "mein-mmo.de", "gamestar.de",
+    "grokipedia.com", "mojeek.com", "yahoo.com", "startpage.com", "duckduckgo.com",
+    "bing.com", "brave.com", "trustpilot.com", "gelbeseiten.de", "dasoertliche.de",
+    "yelp.de", "tripadvisor.de", "11880.com", "kununu.com", "northdata.de", "wlw.de",
 }
 
 PARTNER_WORDS = ("sponsor", "partner", "unterstützer", "unterstuetzer", "supporter", "förderer")

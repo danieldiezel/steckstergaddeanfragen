@@ -13,6 +13,8 @@ from zoneinfo import ZoneInfo
 from . import config, db, discovery, llm, mailer, scrape, telegram
 
 logging.basicConfig(level=logging.INFO, format="%(asctime)s %(levelname)s %(name)s: %(message)s")
+for noisy in ("primp", "ddgs", "httpx", "urllib3"):
+    logging.getLogger(noisy).setLevel(logging.WARNING)
 log = logging.getLogger("main")
 TZ = ZoneInfo(config.TIMEZONE)
 
