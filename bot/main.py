@@ -158,6 +158,54 @@ def next_send_time(t: datetime) -> float:
     return t.timestamp() + random.uniform(0.6, 1.2) * gap * 60
 
 
+def heartbeat(activity: str) -> None:
+    db.set_state("heartbeat", time.time())
+    db.set_state("activity", activity)
+
+
+def sync_settings() -> None:
+    changed = config.apply_overrides(db.get_state)
+    if "DRY_RUN" in changed:
+        if not config.DRY_RUN:
+            db.reset_previews()
+        telegram.send("Testmodus " + ("AN 🧪" if config.DRY_RUN else "AUS, Mails gehen jetzt echt raus ✉️"))
+    if changed:
+        log.info("Einstellungen vom Dashboard übernommen: %s", changed)
+
+
+def process_dashboard_commands(profile: dict) -> None:
+    """Befehle, die das Dashboard in die commands-Tabelle schreibt."""
+    for c in db.pending_commands():
+        cmd, result = c["cmd"], ""
+        try:
+            if cmd == "suche":
+                heartbeat("Suche (vom Dashboard)")
+                result = discovery.run_discovery(profile)
+                db.set_state("last_discovery", time.time())
+            elif cmd == "anreichern":
+                heartbeat("Bewerte Firmen (vom Dashboard)")
+                result = f"{enrich(profile, 10)} bewertet"
+            elif cmd == "jetzt_senden":
+                if db.sent_today() >= config.DAILY_LIMIT:
+                    result = "Tageslimit erreicht"
+                else:
+                    heartbeat("Sende Mail (vom Dashboard)")
+                    result = send_one(profile) or "keine Firma in der Warteschlange"
+                    if result:
+                        telegram.send(f"✉️ Gesendet per Dashboard ({db.sent_today()}/{config.DAILY_LIMIT}): {result}")
+            elif cmd == "antworten_pruefen":
+                evs = mailer.check_replies()
+                for ev in evs:
+                    db.log_reply(ev)
+                result = f"{len(evs)} neue Antworten"
+            else:
+                result = "unbekannter Befehl"
+        except Exception as e:
+            log.exception("Dashboard-Befehl %s", cmd)
+            result = f"Fehler: {e}"
+        db.finish_command(c["id"], result)
+
+
 def run_once(profile: dict) -> None:
     stats = discovery.run_discovery(profile)
     n = enrich(profile, 15)
@@ -167,6 +215,7 @@ def run_once(profile: dict) -> None:
 
 def main() -> None:
     db.init()
+    config.apply_overrides(db.get_state)
     if not config.DRY_RUN:
         db.reset_previews()
     profile = config.load_profile()
@@ -181,23 +230,29 @@ def main() -> None:
 
     while True:
         try:
-            for cmd, arg in telegram.poll(timeout=20):
+            heartbeat("wartet")
+            sync_settings()
+            process_dashboard_commands(profile)
+            for cmd, arg in telegram.poll(timeout=10):
                 handle_command(cmd, arg, profile)
 
             now = local_now()
             ts = now.timestamp()
 
             if ts - float(db.get_state("last_discovery", 0)) > DISCOVERY_EVERY.total_seconds():
+                heartbeat("Suche nach neuen Firmen")
                 discovery.run_discovery(profile)
                 db.set_state("last_discovery", ts)
 
             if db.companies_by_status("neu", 1) and len(db.next_to_contact(config.DAILY_LIMIT)) < config.DAILY_LIMIT * 2:
+                heartbeat("Bewerte Firmen")
                 enrich(profile)
 
             if ts - last_reply_check > REPLY_CHECK_EVERY.total_seconds():
                 last_reply_check = ts
                 try:
                     for ev in mailer.check_replies():
+                        db.log_reply(ev)
                         icon = "🚫 Abmeldung" if ev["typ"] == "abmeldung" else "📬 ANTWORT"
                         telegram.send(f"{icon} von {ev['von']} ({ev['domain']})\n"
                                       f"Betreff: {ev['betreff']}\n\n{ev['auszug']}")
@@ -207,10 +262,12 @@ def main() -> None:
             paused = db.get_state("paused", "0") == "1"
             if (not paused and in_send_window(now) and ts >= next_send
                     and db.sent_today() < config.DAILY_LIMIT):
+                heartbeat("Sende Mail")
                 info = send_one(profile)
                 if info:
                     telegram.send(f"✉️ Gesendet ({db.sent_today()}/{config.DAILY_LIMIT}): {info}")
                 next_send = next_send_time(now)
+                db.set_state("next_send", next_send)
 
             if now.hour == config.SEND_END_HOUR and db.get_state("report_day") != now.date().isoformat():
                 db.set_state("report_day", now.date().isoformat())

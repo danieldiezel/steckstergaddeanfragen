@@ -39,6 +39,23 @@ CREATE TABLE IF NOT EXISTS teams_scanned (
     name TEXT,
     scanned_at TEXT
 );
+CREATE TABLE IF NOT EXISTS commands (
+    id         INTEGER PRIMARY KEY AUTOINCREMENT,
+    cmd        TEXT,
+    arg        TEXT,
+    created_at TEXT,
+    done_at    TEXT,
+    result     TEXT
+);
+CREATE TABLE IF NOT EXISTS replies (
+    id        INTEGER PRIMARY KEY AUTOINCREMENT,
+    domain    TEXT,
+    sender    TEXT,
+    subject   TEXT,
+    excerpt   TEXT,
+    kind      TEXT,
+    received_at TEXT
+);
 CREATE TABLE IF NOT EXISTS state (
     key TEXT PRIMARY KEY,
     value TEXT
@@ -52,7 +69,7 @@ def now() -> str:
 
 @contextmanager
 def conn():
-    c = sqlite3.connect(config.DB_PATH)
+    c = sqlite3.connect(config.DB_PATH, timeout=15)
     c.row_factory = sqlite3.Row
     try:
         yield c
@@ -185,3 +202,20 @@ def team_scanned(url) -> bool:
 def mark_team(url, name=""):
     with conn() as c:
         c.execute("INSERT OR REPLACE INTO teams_scanned VALUES(?,?,?)", (url, name, now()))
+
+
+# --- Steuerung über das Dashboard ---
+def pending_commands():
+    with conn() as c:
+        return c.execute("SELECT * FROM commands WHERE done_at IS NULL ORDER BY id").fetchall()
+
+
+def finish_command(cmd_id, result=""):
+    with conn() as c:
+        c.execute("UPDATE commands SET done_at=?, result=? WHERE id=?", (now(), str(result)[:500], cmd_id))
+
+
+def log_reply(ev: dict):
+    with conn() as c:
+        c.execute("INSERT INTO replies(domain,sender,subject,excerpt,kind,received_at) VALUES(?,?,?,?,?,?)",
+                  (ev["domain"], ev["von"], ev["betreff"], ev["auszug"], ev["typ"], now()))

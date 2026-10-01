@@ -37,6 +37,12 @@ sudo systemctl enable --now steckster-sponsor
 
 **Testmodus:** `DRY_RUN=1` (Standard) schickt nichts raus, sondern zeigt jede Mail als Vorschau in Telegram. Wenn die Mails passen: `DRY_RUN=0` setzen und Service neu starten. Die Vorschau-Firmen wandern dann automatisch zurück in die Warteschlange.
 
+## Steuerung über das Pi-Dashboard
+
+Im PI_DASHBOARD gibt es einen eigenen Bereich für den Bot (Status, Pause, Testmodus,
+Einstellungen, Mails, Warteschlange, Antworten, Log). Einrichtung steht in dessen README.
+Einstellungen aus dem Dashboard haben Vorrang vor der `.env` und greifen ohne Neustart.
+
 ## Telegram-Befehle
 
 | Befehl | Wirkung |

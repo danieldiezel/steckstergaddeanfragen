@@ -32,6 +32,10 @@ def send(text: str) -> None:
 
 def poll(timeout: int = 20) -> list[tuple[str, str]]:
     """Gibt [(befehl, argument)] aus eurem Chat zurück."""
+    if not config.TELEGRAM_TOKEN:
+        import time
+        time.sleep(5)  # ohne Telegram trotzdem nicht im Kreis rennen
+        return []
     offset = int(db.get_state("tg_offset", 0))
     res = _call("getUpdates", offset=offset, timeout=timeout)
     cmds = []
