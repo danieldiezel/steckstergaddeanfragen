@@ -11,6 +11,8 @@ API_URL = "https://api.mistral.ai/v1/chat/completions"
 
 
 def _chat(messages: list[dict], temperature: float = 0.4) -> dict:
+    if not config.MISTRAL_API_KEY:
+        raise RuntimeError("MISTRAL_API_KEY fehlt in .env")
     for attempt in range(4):
         r = requests.post(
             API_URL,
@@ -22,7 +24,8 @@ def _chat(messages: list[dict], temperature: float = 0.4) -> dict:
         if r.status_code == 429:  # Free-Tier-Limit: kurz warten
             time.sleep(20 * (attempt + 1))
             continue
-        r.raise_for_status()
+        if r.status_code >= 400:
+            raise RuntimeError(f"Mistral-Fehler {r.status_code}: {r.text[:300]}")
         return json.loads(r.json()["choices"][0]["message"]["content"])
     raise RuntimeError("Mistral Rate-Limit")
 
