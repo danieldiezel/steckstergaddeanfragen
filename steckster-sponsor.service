@@ -1,3 +1,15 @@
-requests>=2.31
-beautifulsoup4>=4.12
-ddgs>=9.0
+[Unit]
+Description=Steckster Gadde Sponsor-Bot
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=pi
+WorkingDirectory=/home/pi/steckster_sponsor_bot
+ExecStart=/home/pi/steckster_sponsor_bot/venv/bin/python -m bot.main
+Restart=always
+RestartSec=30
+
+[Install]
+WantedBy=multi-user.target
