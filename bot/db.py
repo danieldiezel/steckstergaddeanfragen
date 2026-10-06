@@ -39,6 +39,22 @@ CREATE TABLE IF NOT EXISTS teams_scanned (
     name TEXT,
     scanned_at TEXT
 );
+CREATE TABLE IF NOT EXISTS replies (
+    id            INTEGER PRIMARY KEY AUTOINCREMENT,
+    domain        TEXT,
+    sender        TEXT,
+    subject       TEXT,
+    body          TEXT,
+    message_id    TEXT,
+    refs          TEXT,
+    kind          TEXT,     -- interesse | frage | absage | abmeldung | auto | sonstiges
+    summary       TEXT,
+    draft_subject TEXT,
+    draft_body    TEXT,
+    status        TEXT,     -- offen | gesendet | verworfen | info
+    received_at   TEXT,
+    handled_at    TEXT
+);
 CREATE TABLE IF NOT EXISTS state (
     key TEXT PRIMARY KEY,
     value TEXT
@@ -185,3 +201,40 @@ def team_scanned(url) -> bool:
 def mark_team(url, name=""):
     with conn() as c:
         c.execute("INSERT OR REPLACE INTO teams_scanned VALUES(?,?,?)", (url, name, now()))
+
+
+# --- Antworten von Firmen ---
+def add_reply(**f) -> int:
+    f.setdefault("received_at", now())
+    cols = ", ".join(f)
+    with conn() as c:
+        cur = c.execute(f"INSERT INTO replies({cols}) VALUES({','.join('?' * len(f))})", tuple(f.values()))
+        return cur.lastrowid
+
+
+def update_reply(reply_id: int, **f):
+    cols = ", ".join(f"{k}=?" for k in f)
+    with conn() as c:
+        c.execute(f"UPDATE replies SET {cols} WHERE id=?", (*f.values(), reply_id))
+
+
+def get_reply(reply_id: int):
+    with conn() as c:
+        return c.execute("SELECT * FROM replies WHERE id=?", (reply_id,)).fetchone()
+
+
+def open_replies(limit=10):
+    with conn() as c:
+        return c.execute("SELECT * FROM replies WHERE status='offen' ORDER BY id DESC LIMIT ?",
+                         (limit,)).fetchall()
+
+
+def last_mail_to(domain: str):
+    with conn() as c:
+        return c.execute("SELECT * FROM mails WHERE domain=? AND dry_run=0 ORDER BY id DESC LIMIT 1",
+                         (domain,)).fetchone()
+
+
+def get_company(domain: str):
+    with conn() as c:
+        return c.execute("SELECT * FROM companies WHERE domain=?", (domain,)).fetchone()

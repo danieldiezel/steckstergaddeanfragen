@@ -12,7 +12,7 @@ Sucht selbstständig nach möglichen Trikot- und Teamsponsoren für das Steckste
 2. **Anreichern**: Website + Impressum besuchen, beste Mailadresse wählen (sponsoring@ > marketing@ > info@ ...)
 3. **Bewerten**: Die KI (Groq, Mistral als Ersatz) gibt einen Fit-Score 1 bis 10. Ab `MIN_FIT_SCORE` (Standard 6) kommt die Firma in die Warteschlange
 4. **Schreiben und Senden**: allgemeine Partnerschaftsanfrage ohne Pakete und Preise, Details erst bei Interesse. Lokale Firmen werden auf die Region angesprochen. Keine Gedankenstriche, Signatur automatisch
-5. **Antworten**: prüft alle 30 min das Postfach. Antworten kommen als Telegram-Nachricht, "Abmelden"/"kein Interesse" landet automatisch auf der Sperrliste
+5. **Antworten**: prüft alle 30 min das Postfach. Zu jeder Antwort schreibt die KI einen Antwortvorschlag, legt ihn im Postfach unter "Entwürfe" ab und schickt ihn nach Telegram. Abschicken mit `/senden N`, neu schreiben mit `/neu N Hinweis`. Abwesenheitsnotizen werden erkannt, "Abmelden"/"kein Interesse" landet automatisch auf der Sperrliste
 
 Keine Firma und keine Adresse wird zweimal angeschrieben.
 
@@ -48,6 +48,13 @@ sudo systemctl enable --now steckster-sponsor
 | `/queue` | nächste Firmen in der Warteschlange |
 | `/sperren domain.de` | Firma oder Adresse dauerhaft sperren |
 | `/suche` | Suche sofort starten |
+| `/antworten` | offene Antworten von Firmen |
+| `/vorschlag N` | Antwortvorschlag zu #N nochmal zeigen |
+| `/senden N` | Antwortvorschlag zu #N abschicken (im selben Mailverlauf) |
+| `/neu N Hinweis` | Vorschlag neu schreiben, z.B. `/neu 3 kürzer, nur Silber und Gold` |
+| `/verwerfen N` | selbst antworten oder ignorieren |
+
+Antwortvorschläge werden nie automatisch verschickt. In den Antworten darf die KI die Pakete aus `profil.json` mit Preis und Leistung nennen, wenn die Firma danach fragt.
 
 ## Hinweise
 

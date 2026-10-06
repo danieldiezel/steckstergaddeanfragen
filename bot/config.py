@@ -57,6 +57,8 @@ MAIL_BCC = env("MAIL_BCC")  # optional: Kopie an euch selbst
 IMAP_HOST = env("IMAP_HOST", "imap.ionos.de")
 IMAP_SENT_FOLDER = env("IMAP_SENT_FOLDER", "Gesendete Objekte")
 IMAP_ENABLED = env_bool("IMAP_ENABLED", True)
+IMAP_DRAFTS_FOLDER = env("IMAP_DRAFTS_FOLDER", "Entwürfe")  # wird automatisch erkannt, das ist nur der Ersatz
+REPLY_DRAFTS = env_bool("REPLY_DRAFTS", True)  # Antwortvorschläge erstellen
 
 # --- Telegram ---
 TELEGRAM_TOKEN = env("TELEGRAM_TOKEN")

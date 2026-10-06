@@ -142,3 +142,57 @@ JSON-Felder: betreff (max 60 Zeichen, schlicht, z.B. "Partnerschaftsanfrage Stec
     if profile.get("abmelde_hinweis", "").strip():
         body += "\n\n" + profile["abmelde_hinweis"].strip()
     return {"betreff": _clean(data.get("betreff") or "Partnerschaftsanfrage Steckster Gadde"), "text": body}
+
+
+KINDS = ("interesse", "frage", "absage", "abmeldung", "sonstiges")
+
+
+def write_reply(company: dict, incoming: dict, our_mail: dict | None, profile: dict,
+                hinweis: str = "") -> dict:
+    """Antwortvorschlag auf die Mail einer Firma.
+
+    -> {'art': str, 'zusammenfassung': str, 'betreff': str, 'text': str}
+    Pakete und Preise dürfen hier vorkommen, wenn die Firma danach fragt oder Interesse zeigt.
+    """
+    sys = ("Du hilfst dem Teammanagement eines Esports-Vereins, auf Antworten von Unternehmen "
+           "auf eine Sponsoring-Anfrage zu reagieren. Du schreibst Antwortentwürfe auf Deutsch, Sie-Form, "
+           "freundlich, klar und menschlich. Niemals Gedankenstriche verwenden. Kein Telefonat, keinen Call "
+           "und kein Treffen vorschlagen, alles Weitere läuft per Mail. Keine Floskeln. "
+           "Erfinde keine Fakten, Leistungen, Zahlen oder Termine. Was nicht in den Vereinsinfos steht, "
+           "versprichst du nicht, sondern sagst, dass ihr das gern klärt. Antworte nur als JSON.")
+    ours = ""
+    if our_mail:
+        ours = f"Unsere ursprüngliche Anfrage:\nBetreff: {our_mail['subject']}\n{our_mail['body'][:1500]}\n"
+    extra = f"\nZusätzliche Vorgabe vom Teammanagement: {hinweis}\n" if hinweis else ""
+    user = f"""{_profile_text(profile, pakete=True)}
+Ansprechpartner (unterschreibt): {profile.get('ansprechpartner', '')}
+
+{ours}
+Antwort des Unternehmens {company.get('name') or company.get('domain')} ({incoming['sender']}):
+Betreff: {incoming['subject']}
+{incoming['body'][:3000]}
+{extra}
+Aufgaben:
+1. Ordne die Antwort ein: interesse (will mehr wissen oder ist offen), frage (konkrete Frage),
+   absage (kein Interesse, kein Budget), abmeldung (will keine Mails mehr), sonstiges.
+2. Fasse in einem Satz zusammen, was das Unternehmen will.
+3. Schreibe einen passenden Antwortentwurf (60 bis 160 Wörter):
+   - interesse/frage: bedanken, Fragen konkret beantworten, wenn passend die Sponsoring-Pakete
+     mit Name, Preis und Leistung nennen (eine Zeile je Paket), Hinweis dass individuelle Absprachen
+     möglich sind, nächsten Schritt per Mail vorschlagen.
+   - absage: kurz und herzlich bedanken, Tür offen lassen, nicht nachhaken.
+   - abmeldung: kurz bestätigen, dass keine weiteren Mails kommen.
+   - sonstiges: passend reagieren.
+   Anrede mit Namen, wenn der Absender einen Namen nennt, sonst "Sehr geehrte Damen und Herren".
+   Grußformel und Signatur NICHT schreiben, die werden automatisch angehängt.
+JSON-Felder: art, zusammenfassung, betreff (Antwortbetreff, beginnt mit "AW: " und dem Originalbetreff), text."""
+    data = _chat([{"role": "system", "content": sys}, {"role": "user", "content": user}], 0.4)
+    art = str(data.get("art", "sonstiges")).lower().strip()
+    subject = incoming["subject"] or "Sponsoring Steckster Gadde"
+    betreff = _clean(data.get("betreff") or "")
+    if not betreff.lower().startswith(("aw:", "re:")):
+        betreff = subject if subject.lower().startswith(("aw:", "re:")) else f"AW: {subject}"
+    body = _clean(data.get("text", "")) + "\n\n" + profile["signatur"].strip()
+    return {"art": art if art in KINDS else "sonstiges",
+            "zusammenfassung": _clean(data.get("zusammenfassung", "")),
+            "betreff": betreff, "text": body}

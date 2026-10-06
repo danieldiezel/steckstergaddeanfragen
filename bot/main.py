@@ -10,7 +10,7 @@ import time
 from datetime import datetime, timedelta
 from zoneinfo import ZoneInfo
 
-from . import config, db, discovery, llm, mailer, scrape, telegram
+from . import config, db, discovery, llm, mailer, replies, scrape, telegram
 
 logging.basicConfig(level=logging.INFO, format="%(asctime)s %(levelname)s %(name)s: %(message)s")
 for noisy in ("primp", "ddgs", "httpx", "urllib3"):
@@ -105,10 +105,20 @@ HILFE = """Steckster Sponsor-Bot
 /queue    nächste Firmen in der Warteschlange
 /sperren  domain.de oder mail@x.de dauerhaft sperren
 /suche    Suche jetzt starten
+
+Antworten von Firmen
+/antworten        offene Antworten mit Vorschlag
+/vorschlag N      Vorschlag zu #N nochmal zeigen
+/senden N         Vorschlag zu #N abschicken
+/neu N Hinweis    Vorschlag neu schreiben lassen
+/verwerfen N      selbst antworten oder ignorieren
+
 /hilfe    diese Übersicht"""
 
 
 def handle_command(cmd: str, arg: str, profile: dict) -> None:
+    if replies.command(cmd, arg, profile):
+        return
     if cmd in ("/start", "/hilfe", "/help"):
         telegram.send(HILFE)
     elif cmd == "/status":
@@ -197,10 +207,7 @@ def main() -> None:
             if ts - last_reply_check > REPLY_CHECK_EVERY.total_seconds():
                 last_reply_check = ts
                 try:
-                    for ev in mailer.check_replies():
-                        icon = "🚫 Abmeldung" if ev["typ"] == "abmeldung" else "📬 ANTWORT"
-                        telegram.send(f"{icon} von {ev['von']} ({ev['domain']})\n"
-                                      f"Betreff: {ev['betreff']}\n\n{ev['auszug']}")
+                    replies.handle_incoming(mailer.check_replies(), profile)
                 except Exception as e:
                     log.warning("Antwortprüfung fehlgeschlagen: %s", e)
 
