@@ -5,9 +5,9 @@ Wants=network-online.target
 
 [Service]
 Type=simple
-User=pi
-WorkingDirectory=/home/pi/steckstergaddeanfragen
-ExecStart=/home/pi/steckstergaddeanfragen/venv/bin/python -m web.app
+User=daniel
+WorkingDirectory=/home/daniel/steckstergaddeanfragen
+ExecStart=/home/daniel/steckstergaddeanfragen/venv/bin/python -m web.app
 Restart=on-failure
 RestartSec=5
 

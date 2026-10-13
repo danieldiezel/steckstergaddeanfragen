@@ -67,7 +67,7 @@ Im Pi-Dashboard in `apps.json` erg√§nzen (danach `generate_sudoers.py` neu ausf√
 
 ```json
 {"id": "sponsor_dashboard", "name": "Sponsor-Bot Dashboard", "service": "steckster-sponsor-dashboard.service",
- "repo_path": "/home/pi/steckstergaddeanfragen", "url": "http://{host}:5090"}
+ "repo_path": "/home/daniel/steckstergaddeanfragen", "url": "http://{host}:5090"}
 ```
 
 Alternativ statt eigener Zeile: beim bestehenden Eintrag `steckster-sponsor` einfach `"url": "http://{host}:5090"`
