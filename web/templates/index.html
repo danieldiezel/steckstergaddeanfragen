@@ -1,0 +1,517 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<meta name="theme-color" content="#0B0D10">
+<title>SPONSOR-BOT</title>
+<script>
+  if (/PiControlApp/.test(navigator.userAgent)) document.documentElement.classList.add('in-app');
+</script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Oswald:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#0B0D10; --panel:#14171C; --panel-2:#1A1E24; --border:#232830;
+    --amber:#E8A33D; --amber-dim:#8A6425; --amber-glow:rgba(232,163,61,.10);
+    --green:#3DDC84; --red:#FF5C5C; --blue:#5CA8FF; --text:#E7E9EC; --text-dim:#7B838D;
+    --nav-h:64px;
+  }
+  *{box-sizing:border-box;}
+  html{-webkit-tap-highlight-color:transparent;}
+  body{
+    margin:0; background:var(--bg); color:var(--text); font-family:'JetBrains Mono', monospace; min-height:100vh;
+    background-image:linear-gradient(var(--border) 1px, transparent 1px), linear-gradient(90deg, var(--border) 1px, transparent 1px);
+    background-size:40px 40px; background-attachment:fixed;
+  }
+  button{
+    font-family:'Oswald',sans-serif; letter-spacing:1px; font-size:12px; background:var(--panel-2); color:var(--text);
+    border:1px solid var(--border); border-radius:6px; min-height:44px; padding:0 14px; cursor:pointer;
+    touch-action:manipulation; transition:transform .1s, border-color .15s;
+  }
+  button:active{transform:scale(.97);}
+  button:disabled{opacity:.4; pointer-events:none;}
+  @media (hover:hover){ button:hover{border-color:var(--amber); color:var(--amber);} }
+  button.primary{background:var(--amber); color:var(--bg); border-color:var(--amber); font-weight:600;}
+  button.danger{color:var(--red); border-color:rgba(255,92,92,.35);}
+  button.small{min-height:34px; padding:0 10px; font-size:11px;}
+  input, textarea{
+    width:100%; font-family:'JetBrains Mono', monospace; font-size:14px; color:var(--text);
+    background:var(--panel-2); border:1px solid var(--border); border-radius:6px; padding:10px 12px;
+  }
+  input:focus, textarea:focus{outline:none; border-color:var(--amber);}
+  textarea{min-height:220px; line-height:1.5; resize:vertical;}
+
+  header{
+    position:sticky; top:0; z-index:10; display:flex; align-items:center; justify-content:space-between; gap:10px;
+    padding:14px 16px; background:rgba(11,13,16,.92); backdrop-filter:blur(6px); border-bottom:1px solid var(--border);
+  }
+  header h1{margin:0; font-family:'Oswald',sans-serif; font-weight:700; letter-spacing:3px; font-size:19px; display:flex; align-items:center; gap:10px;}
+  header .sub{font-size:10px; color:var(--amber); letter-spacing:2px; font-family:'Oswald',sans-serif;}
+  .dot{width:9px; height:9px; border-radius:50%; display:inline-block; background:var(--text-dim);}
+  .dot.on{background:var(--green); box-shadow:0 0 8px var(--green);}
+  .dot.pause{background:var(--amber); box-shadow:0 0 8px var(--amber);}
+  .in-app header{padding:10px 16px;}
+  .in-app header h1{font-size:16px;}
+
+  main{max-width:860px; margin:0 auto; padding:4px 12px calc(var(--nav-h) + 28px + env(safe-area-inset-bottom));}
+  .section-label{
+    font-family:'Oswald',sans-serif; letter-spacing:3px; font-size:11px; color:var(--text-dim);
+    margin:24px 4px 10px; display:flex; align-items:center; gap:10px;
+  }
+  .section-label::after{content:''; flex:1; height:1px; background:var(--border);}
+  .card{background:var(--panel); border:1px solid var(--border); border-radius:10px; padding:14px; position:relative; overflow:hidden;}
+  .hint{font-size:11px; color:var(--text-dim); line-height:1.5;}
+  .empty{color:var(--text-dim); font-size:12px; text-align:center; padding:40px 10px;}
+
+  /* Status */
+  .status{margin-top:14px;}
+  .status::before{content:''; position:absolute; top:0; left:0; right:0; height:2px; background:var(--green);}
+  .status.paused::before{background:var(--amber);}
+  .status-top{display:flex; justify-content:space-between; align-items:flex-start; gap:12px;}
+  .status-state{font-family:'Oswald',sans-serif; font-size:22px; letter-spacing:2px;}
+  .status.paused .status-state{color:var(--amber);}
+  .status-state.on{color:var(--green);}
+  .badge{display:inline-block; font-family:'Oswald',sans-serif; letter-spacing:1px; font-size:10px; padding:3px 8px; border-radius:10px; border:1px solid var(--border); color:var(--text-dim);}
+  .badge.test{border-color:var(--blue); color:var(--blue);}
+  .badge.amber{border-color:var(--amber-dim); color:var(--amber);}
+  .badge.green{border-color:rgba(61,220,132,.4); color:var(--green);}
+  .badge.red{border-color:rgba(255,92,92,.4); color:var(--red);}
+  .today{margin-top:14px;}
+  .today-num{font-size:30px; font-weight:700;}
+  .today-num small{font-size:14px; color:var(--text-dim); font-weight:400;}
+  .bar{height:6px; background:var(--panel-2); border-radius:3px; overflow:hidden; margin-top:8px;}
+  .bar i{display:block; height:100%; background:var(--amber); border-radius:3px; transition:width .4s;}
+  .status-meta{font-size:11px; color:var(--text-dim); margin-top:10px; line-height:1.7;}
+  .status-btns{display:grid; grid-template-columns:1fr 1fr; gap:8px; margin-top:14px;}
+
+  .kpis{display:grid; grid-template-columns:1fr 1fr; gap:8px;}
+  .kpi{background:var(--panel); border:1px solid var(--border); border-radius:10px; padding:12px 14px; cursor:default;}
+  .kpi.link{cursor:pointer;}
+  .kpi .l{font-family:'Oswald',sans-serif; letter-spacing:2px; font-size:10px; color:var(--text-dim);}
+  .kpi .v{font-size:26px; font-weight:700; margin-top:4px;}
+  .kpi .s{font-size:10px; color:var(--text-dim); margin-top:2px;}
+  .kpi.hl{border-color:var(--amber-dim);}
+  .kpi.hl .v{color:var(--amber);}
+
+  .chart svg{display:block; width:100%; height:auto;}
+  .legend{display:flex; gap:14px; font-size:10px; color:var(--text-dim); margin-top:8px;}
+  .legend i{display:inline-block; width:10px; height:10px; border-radius:2px; margin-right:5px; vertical-align:-1px;}
+
+  .hbars{display:flex; flex-direction:column; gap:8px;}
+  .hb{display:grid; grid-template-columns:118px 1fr 40px; align-items:center; gap:8px; font-size:11px;}
+  .hb .t{height:8px; background:var(--panel-2); border-radius:4px; overflow:hidden;}
+  .hb .t i{display:block; height:100%; border-radius:4px; background:var(--amber);}
+  .hb .n{text-align:right; color:var(--text);}
+
+  table{width:100%; border-collapse:collapse; font-size:11px;}
+  th{font-family:'Oswald',sans-serif; letter-spacing:1px; font-weight:500; color:var(--text-dim); text-align:right; padding:6px 4px; border-bottom:1px solid var(--border);}
+  th:first-child, td:first-child{text-align:left;}
+  td{padding:9px 4px; border-bottom:1px solid var(--border); text-align:right;}
+  tr:last-child td{border-bottom:none;}
+
+  /* Listen */
+  .list{display:flex; flex-direction:column; gap:8px;}
+  .item{background:var(--panel); border:1px solid var(--border); border-radius:10px; padding:12px 14px;}
+  .item-head{display:flex; justify-content:space-between; gap:10px; align-items:flex-start; cursor:pointer;}
+  .item-title{font-family:'Oswald',sans-serif; font-size:15px; letter-spacing:.5px; word-break:break-word;}
+  .item-sub{font-size:11px; color:var(--text-dim); margin-top:3px; word-break:break-all;}
+  .item-meta{font-size:10px; color:var(--text-dim); white-space:nowrap; text-align:right;}
+  .item-body{display:none; margin-top:12px; border-top:1px solid var(--border); padding-top:12px;}
+  .item.open .item-body{display:block;}
+  .mailtext{white-space:pre-wrap; font-size:12px; line-height:1.55; background:var(--panel-2); border-radius:6px; padding:10px 12px; max-height:340px; overflow:auto;}
+  .kv{font-size:11px; line-height:1.7; margin-bottom:10px;}
+  .kv b{color:var(--text-dim); font-weight:400;}
+  .score{display:inline-flex; align-items:center; justify-content:center; min-width:38px; height:24px; border-radius:12px; font-size:11px; font-weight:700; background:var(--amber-glow); color:var(--amber); border:1px solid var(--amber-dim);}
+  .score.hi{background:rgba(61,220,132,.1); color:var(--green); border-color:rgba(61,220,132,.4);}
+  .row-btns{display:flex; gap:8px; margin-top:12px; flex-wrap:wrap;}
+  .row-btns button{flex:1;}
+  .search{margin-bottom:10px;}
+  .chips{display:flex; gap:6px; margin:14px 0 10px;}
+  .chip{min-height:36px; border-radius:18px; padding:0 14px; font-size:12px;}
+  .chip.sel{background:var(--amber-glow); border-color:var(--amber); color:var(--amber);}
+
+  /* Antworten */
+  .reply.offen{border-color:var(--amber-dim);}
+  .reply-summary{font-size:12px; line-height:1.5; margin-top:8px;}
+  .reply label{display:block; font-family:'Oswald',sans-serif; letter-spacing:2px; font-size:10px; color:var(--text-dim); margin:14px 0 6px;}
+  details summary{list-style:none; cursor:pointer; font-family:'Oswald',sans-serif; letter-spacing:2px; font-size:10px; color:var(--text-dim); margin-top:12px;}
+  details summary::-webkit-details-marker{display:none;}
+  details summary::before{content:'▸ '; color:var(--amber);}
+  details[open] summary::before{content:'▾ ';}
+  details .mailtext{margin-top:8px;}
+
+  /* Navigation unten */
+  nav{
+    position:fixed; left:0; right:0; bottom:0; z-index:20; display:grid; grid-template-columns:repeat(5,1fr);
+    background:rgba(20,23,28,.97); backdrop-filter:blur(8px); border-top:1px solid var(--border);
+    padding-bottom:env(safe-area-inset-bottom);
+  }
+  nav button{
+    border:none; border-radius:0; background:transparent; min-height:var(--nav-h); padding:6px 2px;
+    display:flex; flex-direction:column; align-items:center; justify-content:center; gap:3px;
+    font-size:10px; color:var(--text-dim); position:relative;
+  }
+  nav button .i{font-size:19px; line-height:1;}
+  nav button.sel{color:var(--amber);}
+  nav button.sel::before{content:''; position:absolute; top:0; left:25%; right:25%; height:2px; background:var(--amber); border-radius:0 0 2px 2px;}
+  nav .cnt{position:absolute; top:7px; left:calc(50% + 6px); background:var(--red); color:#fff; font-family:'JetBrains Mono',monospace; font-size:9px; font-weight:700; min-width:16px; height:16px; border-radius:8px; display:flex; align-items:center; justify-content:center; padding:0 4px;}
+  @media (hover:hover){ nav button:hover{color:var(--amber);} }
+
+  .toast{
+    position:fixed; left:50%; bottom:calc(var(--nav-h) + 14px + env(safe-area-inset-bottom)); z-index:200;
+    transform:translate(-50%, 20px); opacity:0; pointer-events:none; width:max-content; max-width:calc(100vw - 32px);
+    background:var(--panel-2); border:1px solid var(--border); border-left:3px solid var(--green); border-radius:6px;
+    padding:12px 16px; font-size:12px; box-shadow:0 8px 30px rgba(0,0,0,.5); transition:opacity .2s, transform .2s;
+  }
+  .toast.err{border-left-color:var(--red);}
+  .toast.show{opacity:1; transform:translate(-50%,0);}
+  @media (min-width:700px){ .kpis{grid-template-columns:repeat(3,1fr);} }
+</style>
+</head>
+<body>
+<header>
+  <div>
+    <h1><span class="dot" id="dot"></span>SPONSOR-BOT</h1>
+    <div class="sub">STECKSTER GADDE</div>
+  </div>
+  <span id="head-badge"></span>
+</header>
+
+<main id="main"><div class="empty">Lade …</div></main>
+
+<nav id="nav">
+  <button data-tab="overview" class="sel"><span class="i">📊</span>ÜBERSICHT</button>
+  <button data-tab="replies"><span class="i">💬</span>ANTWORTEN<span class="cnt" id="cnt-replies" hidden></span></button>
+  <button data-tab="mails"><span class="i">✉️</span>GESENDET</button>
+  <button data-tab="queue"><span class="i">⏳</span>QUEUE</button>
+  <button data-tab="blacklist"><span class="i">🚫</span>SPERRE</button>
+</nav>
+
+<div class="toast" id="toast"></div>
+
+<script>
+const $ = id => document.getElementById(id);
+const S = { tab:'overview', overview:null, replies:[], replyFilter:'offen', mails:[], mailQuery:'', mailsDone:false,
+            queue:[], blacklist:[], open:{}, busy:{} };
+
+function esc(v){ return String(v ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
+function num(n){ return n == null ? '--' : Number(n).toLocaleString('de-DE'); }
+function dt(s, withTime=true){
+  if(!s) return '--';
+  const d = new Date(s.length <= 10 ? s + 'T00:00' : s);
+  return d.toLocaleString('de-DE', withTime ? {day:'2-digit', month:'2-digit', hour:'2-digit', minute:'2-digit'} : {day:'2-digit', month:'2-digit'});
+}
+let toastT;
+function toast(m, err=false){ const t=$('toast'); t.textContent=m; t.classList.toggle('err',err); t.classList.add('show'); clearTimeout(toastT); toastT=setTimeout(()=>t.classList.remove('show'), err?5000:2400); }
+
+async function api(url, method='GET', body){
+  const res = await fetch(url, body === undefined && method === 'GET' ? {} : {method, headers:{'Content-Type':'application/json'}, body: JSON.stringify(body ?? {})});
+  let j = null; try{ j = await res.json(); }catch(e){}
+  if(!res.ok || (j && j.ok === false)) throw new Error((j && j.error) || ('HTTP ' + res.status));
+  return j;
+}
+
+const STATUS_DE = { neu:'Neu gefunden', angereichert:'Geprüft, passt', ungeeignet:'Passt nicht', kein_kontakt:'Kein Kontakt',
+  gesendet:'Angeschrieben', antwort:'Hat geantwortet', abgemeldet:'Abgemeldet', fehler:'Fehler', vorschau:'Testvorschau' };
+const SRC_DE = { sponsor_von:'Sponsoren anderer Teams', lokal:'Lokale Firmen', esports_suche:'Esports-Suche', esports:'Esports-Teams',
+  branche:'Branchen', branchen:'Branchen', liga:'DACH CS Liga', sonstige:'Sonstige' };
+const KIND = { interesse:['🔥 Interesse','green'], frage:['❓ Frage','amber'], absage:['👋 Absage',''], abmeldung:['🚫 Abmeldung','red'],
+  antwort:['📬 Antwort',''], sonstiges:['📬 Antwort',''] };
+const RSTATUS = { offen:['OFFEN','amber'], gesendet:['BEANTWORTET','green'], verworfen:['VERWORFEN',''], info:['INFO',''] };
+function srcLabel(s){ return SRC_DE[s] || s; }
+function srcText(src, detail){
+  if(!src) return '--';
+  const [k, ...rest] = src.split(':'); const extra = rest.join(':') || detail || '';
+  return srcLabel(k) + (extra ? ' · ' + extra : '');
+}
+
+// ---------------- Übersicht ----------------
+function chart(series){
+  const W = 600, H = 150, pad = 18, n = series.length;
+  const max = Math.max(3, ...series.map(s => Math.max(s.sent, s.replies)));
+  const bw = (W - pad) / n;
+  let bars = '', labels = '';
+  series.forEach((s, i) => {
+    const x = pad + i * bw;
+    const h = s.sent / max * (H - 30);
+    const hr = s.replies / max * (H - 30);
+    bars += `<rect x="${x + 1}" y="${H - 18 - h}" width="${bw * 0.62}" height="${h}" rx="2" fill="#E8A33D"><title>${dt(s.date,false)}: ${s.sent} gesendet</title></rect>`;
+    if(s.replies) bars += `<rect x="${x + bw * 0.5}" y="${H - 18 - hr}" width="${bw * 0.38}" height="${hr}" rx="2" fill="#3DDC84"><title>${s.replies} Antworten</title></rect>`;
+    if(i % 7 === 0 || i === n - 1) labels += `<text x="${x + bw * 0.3}" y="${H - 4}" fill="#7B838D" font-size="10" text-anchor="middle">${dt(s.date,false)}</text>`;
+  });
+  const grid = [0.5, 1].map(f => `<line x1="${pad}" x2="${W}" y1="${H - 18 - f * (H - 30)}" y2="${H - 18 - f * (H - 30)}" stroke="#232830"/>
+    <text x="0" y="${H - 14 - f * (H - 30)}" fill="#7B838D" font-size="9">${Math.round(max * f)}</text>`).join('');
+  return `<svg viewBox="0 0 ${W} ${H}" role="img" aria-label="Mails pro Tag">${grid}${bars}${labels}</svg>
+    <div class="legend"><span><i style="background:#E8A33D"></i>gesendet</span><span><i style="background:#3DDC84"></i>Antworten</span></div>`;
+}
+
+function renderOverview(){
+  const o = S.overview;
+  if(!o) return '<div class="empty">Lade …</div>';
+  const st = o.paused ? 'PAUSIERT' : 'AKTIV';
+  const pct = Math.min(100, o.sent_today / Math.max(o.daily_limit, 1) * 100);
+  const statusOrder = ['neu','angereichert','gesendet','antwort','ungeeignet','kein_kontakt','abgemeldet','fehler','vorschau'];
+  const maxC = Math.max(1, ...Object.values(o.counts));
+  const hbars = statusOrder.filter(k => o.counts[k]).map(k => `<div class="hb"><span>${STATUS_DE[k] || k}</span>
+      <div class="t"><i style="width:${o.counts[k] / maxC * 100}%; background:${k==='antwort'?'#3DDC84':k==='gesendet'?'#E8A33D':k==='angereichert'?'#5CA8FF':'#4A515B'}"></i></div>
+      <span class="n">${num(o.counts[k])}</span></div>`).join('');
+  const sources = o.sources.map(s => `<tr><td>${esc(srcLabel(s.src))}</td><td>${num(s.found)}</td><td>${num(s.sent)}</td><td>${num(s.replied)}</td></tr>`).join('');
+  return `
+  <div class="card status ${o.paused ? 'paused' : ''}">
+    <div class="status-top">
+      <div><div class="hint">VERSAND</div><div class="status-state ${o.paused ? '' : 'on'}">${o.paused ? '⏸' : '▶'} ${st}</div></div>
+      <div style="text-align:right">${o.dry_run ? '<span class="badge test">TESTMODUS</span>' : '<span class="badge green">LIVE</span>'}</div>
+    </div>
+    <div class="today">
+      <div class="hint">HEUTE GESENDET</div>
+      <div class="today-num">${o.sent_today}<small> / ${o.daily_limit}</small></div>
+      <div class="bar"><i style="width:${pct}%"></i></div>
+    </div>
+    <div class="status-meta">
+      Versandfenster ${esc(o.window)} · ${o.in_window ? '<span style="color:var(--green)">gerade aktiv</span>' : 'gerade außerhalb'}<br>
+      Mindest-Score ${o.min_score}/10 · Letzte Suche ${o.last_discovery ? dt(o.last_discovery) : '--'}
+      ${o.search_requested ? '<br><span style="color:var(--amber)">🔎 Suche angefordert, startet in Kürze</span>' : ''}
+    </div>
+    <div class="status-btns">
+      <button class="${o.paused ? 'primary' : ''}" data-act="pause">${o.paused ? '▶ FORTSETZEN' : '⏸ PAUSIEREN'}</button>
+      <button data-act="search" ${o.search_requested ? 'disabled' : ''}>🔎 SUCHE STARTEN</button>
+    </div>
+  </div>
+
+  <div class="section-label">KENNZAHLEN</div>
+  <div class="kpis">
+    <div class="kpi"><div class="l">ANGESCHRIEBEN</div><div class="v">${num(o.sent_total)}</div><div class="s">Firmen gesamt</div></div>
+    <div class="kpi ${o.open_replies ? 'hl link' : 'link'}" data-goto="replies"><div class="l">OFFENE ANTWORTEN</div><div class="v">${num(o.open_replies)}</div><div class="s">warten auf Freigabe</div></div>
+    <div class="kpi"><div class="l">ANTWORTQUOTE</div><div class="v">${o.reply_rate == null ? '--' : num(o.reply_rate) + '%'}</div><div class="s">der angeschriebenen Firmen</div></div>
+    <div class="kpi"><div class="l">INTERESSE</div><div class="v" style="color:var(--green)">${num(o.interest)}</div><div class="s">Interesse oder Rückfragen</div></div>
+    <div class="kpi link" data-goto="queue"><div class="l">WARTESCHLANGE</div><div class="v">${num(o.queue)}</div><div class="s">≈ ${o.daily_limit ? Math.ceil(o.queue / o.daily_limit) : '--'} Versandtag${o.daily_limit && Math.ceil(o.queue / o.daily_limit) === 1 ? '' : 'e'}</div></div>
+    <div class="kpi"><div class="l">GEFUNDEN</div><div class="v">${num(o.found_total)}</div><div class="s">${num(o.blacklist)} gesperrt</div></div>
+  </div>
+
+  <div class="section-label">LETZTE 30 TAGE</div>
+  <div class="card chart">${chart(o.series)}</div>
+
+  <div class="section-label">FIRMEN NACH STATUS</div>
+  <div class="card"><div class="hbars">${hbars || '<div class="hint">Noch keine Firmen.</div>'}</div></div>
+
+  <div class="section-label">QUELLEN</div>
+  <div class="card">${sources ? `<table><tr><th>Quelle</th><th>Gefunden</th><th>Angeschr.</th><th>Antw.</th></tr>${sources}</table>` : '<div class="hint">Noch keine Daten.</div>'}</div>`;
+}
+
+// ---------------- Antworten ----------------
+function renderReplies(){
+  const chips = `<div class="chips">
+    <button class="chip ${S.replyFilter==='offen'?'sel':''}" data-rfilter="offen">OFFEN</button>
+    <button class="chip ${S.replyFilter==='alle'?'sel':''}" data-rfilter="alle">ALLE</button></div>`;
+  if(!S.replies.length) return chips + `<div class="empty">${S.replyFilter==='offen' ? 'Keine offenen Antworten 🎉' : 'Noch keine Antworten von Firmen.'}</div>`;
+  return chips + '<div class="list">' + S.replies.map(r => {
+    const [kl, kc] = KIND[r.kind] || KIND.sonstiges;
+    const [sl, sc] = RSTATUS[r.status] || [r.status, ''];
+    const editable = r.status === 'offen';
+    const busy = S.busy[r.id];
+    return `<div class="item reply ${r.status}">
+      <div style="display:flex; justify-content:space-between; gap:8px; align-items:center">
+        <span class="badge ${kc}">${kl}</span><span class="badge ${sc}">${sl}</span>
+      </div>
+      <div class="item-title" style="margin-top:10px">#${r.id} ${esc(r.company_name || r.domain)}</div>
+      <div class="item-sub">${esc(r.sender)} · ${dt(r.received_at)}</div>
+      <div class="reply-summary">${esc(r.summary || r.subject)}</div>
+      <details><summary>NACHRICHT DER FIRMA</summary><div class="mailtext">Betreff: ${esc(r.subject)}\n\n${esc(r.body)}</div></details>
+      ${r.draft_body ? `
+        <label>ANTWORT ${editable ? '(BEARBEITBAR)' : ''}</label>
+        ${editable ? `<input id="subj-${r.id}" value="${esc(r.draft_subject)}">
+                      <textarea id="body-${r.id}" style="margin-top:8px">${esc(r.draft_body)}</textarea>`
+                   : `<div class="mailtext">Betreff: ${esc(r.draft_subject)}\n\n${esc(r.draft_body)}</div>`}
+      ` : `<div class="hint" style="margin-top:12px">Noch kein Antwortvorschlag.</div>`}
+      ${editable ? `
+        <label>NEU SCHREIBEN LASSEN (OPTIONALER HINWEIS)</label>
+        <input id="hint-${r.id}" placeholder="z. B. kürzer, nur Silber und Gold nennen">
+        <div class="row-btns">
+          <button class="primary" data-send="${r.id}" ${busy || !r.draft_body ? 'disabled' : ''}>✉ SENDEN</button>
+          <button data-rewrite="${r.id}" ${busy ? 'disabled' : ''}>${busy === 'rewrite' ? '✏ SCHREIBT …' : '✏ NEU'}</button>
+          <button class="danger" data-discard="${r.id}" ${busy ? 'disabled' : ''}>✕</button>
+        </div>` : ''}
+    </div>`;
+  }).join('') + '</div>';
+}
+
+// ---------------- Gesendet ----------------
+function renderMails(){
+  const search = `<div class="search" style="margin-top:14px"><input id="mail-q" placeholder="Firma oder Mailadresse suchen …" value="${esc(S.mailQuery)}"></div>`;
+  if(!S.mails.length) return search + '<div class="empty">Noch keine Mails verschickt.</div>';
+  return search + '<div class="list">' + S.mails.map(m => {
+    const [br, , hook] = (m.fit_reason || '').split(/:|\|\|/);
+    return `<div class="item ${S.open['m' + m.id] ? 'open' : ''}">
+      <div class="item-head" data-toggle="m${m.id}">
+        <div style="min-width:0">
+          <div class="item-title">${esc(m.name || m.domain)} ${m.replied ? '<span class="badge green">ANTWORT</span>' : ''}</div>
+          <div class="item-sub">${esc(m.to_email)}</div>
+          <div class="item-sub" style="color:var(--text)">${esc(m.subject)}</div>
+        </div>
+        <div class="item-meta">${dt(m.sent_at)}<br><br>${m.fit_score != null ? `<span class="score ${m.fit_score >= 8 ? 'hi' : ''}">${m.fit_score}/10</span>` : ''}</div>
+      </div>
+      <div class="item-body">
+        <div class="kv"><b>Quelle:</b> ${esc(srcText(m.source, m.source_detail))}<br>
+          ${br ? `<b>Branche:</b> ${esc(br.trim())}<br>` : ''}
+          <b>Begründung:</b> ${esc(((m.fit_reason || '').split('||')[0].split(':').slice(1).join(':') || '--').trim())}<br>
+          ${m.website ? `<b>Website:</b> <a href="${esc(m.website)}" target="_blank" rel="noopener" style="color:var(--amber)">${esc(m.website)}</a>` : ''}</div>
+        <div class="mailtext">${esc(m.body)}</div>
+      </div>
+    </div>`;
+  }).join('') + '</div>' + (S.mailsDone ? '' : '<div style="margin-top:10px"><button data-act="more-mails" style="width:100%">MEHR LADEN</button></div>');
+}
+
+// ---------------- Warteschlange ----------------
+function renderQueue(){
+  if(!S.queue.length) return '<div class="empty">Warteschlange leer. Neue Firmen kommen mit der nächsten Suche.</div>';
+  return `<div class="hint" style="margin:14px 4px 10px">Die nächsten Firmen, die angeschrieben werden (beste Bewertung zuerst). „Nicht anschreiben“ setzt sie auf die Sperrliste.</div>
+    <div class="list">` + S.queue.map((c, i) => {
+    const [head, hook] = (c.fit_reason || '').split('||');
+    const [br, ...why] = head.split(':');
+    return `<div class="item ${S.open['q' + c.domain] ? 'open' : ''}">
+      <div class="item-head" data-toggle="q${esc(c.domain)}">
+        <div style="min-width:0">
+          <div class="item-title">${i + 1}. ${esc(c.name || c.domain)}</div>
+          <div class="item-sub">${esc(br.trim())} · ${esc(c.email)}</div>
+        </div>
+        <span class="score ${c.fit_score >= 8 ? 'hi' : ''}">${c.fit_score}/10</span>
+      </div>
+      <div class="item-body">
+        <div class="kv"><b>Warum:</b> ${esc(why.join(':').trim() || '--')}<br>
+          ${hook ? `<b>Aufhänger:</b> ${esc(hook.trim())}<br>` : ''}
+          <b>Quelle:</b> ${esc(srcText(c.source, c.source_detail))}<br>
+          <b>Gefunden:</b> ${dt(c.created_at)}<br>
+          ${c.website ? `<b>Website:</b> <a href="${esc(c.website)}" target="_blank" rel="noopener" style="color:var(--amber)">${esc(c.website)}</a>` : ''}</div>
+        <div class="row-btns"><button class="danger" data-block="${esc(c.domain)}">🚫 NICHT ANSCHREIBEN</button></div>
+      </div>
+    </div>`;
+  }).join('') + '</div>';
+}
+
+// ---------------- Sperrliste ----------------
+function renderBlacklist(){
+  return `<div class="card" style="margin-top:14px">
+      <div class="hint" style="margin-bottom:8px">Domain oder Mailadresse dauerhaft sperren. Wird nie angeschrieben.</div>
+      <div style="display:flex; gap:8px"><input id="bl-input" placeholder="firma.de oder info@firma.de" autocapitalize="off">
+      <button class="primary" data-act="bl-add">SPERREN</button></div>
+    </div>
+    <div class="section-label">GESPERRT (${S.blacklist.length})</div>
+    <div class="list">${S.blacklist.map(b => `<div class="item" style="display:flex; justify-content:space-between; align-items:center; gap:10px">
+      <div style="min-width:0"><div class="item-title" style="font-size:13px; word-break:break-all">${esc(b.value)}</div>
+        <div class="item-sub">${esc(b.reason || '')} · ${dt(b.added_at)}</div></div>
+      <button class="small" data-unblock="${esc(b.value)}">ENTSPERREN</button></div>`).join('') || '<div class="empty">Sperrliste ist leer.</div>'}</div>`;
+}
+
+// ---------------- Laden & Rendern ----------------
+function render(){
+  const o = S.overview;
+  if(o){
+    $('dot').className = 'dot ' + (o.paused ? 'pause' : 'on');
+    $('head-badge').innerHTML = o.dry_run ? '<span class="badge test">TEST</span>' : (o.paused ? '<span class="badge amber">PAUSE</span>' : '<span class="badge green">LIVE</span>');
+    const c = $('cnt-replies'); c.hidden = !o.open_replies; c.textContent = o.open_replies;
+  }
+  // Eingaben in Antworten nicht durch Auto-Refresh ueberschreiben
+  const active = document.activeElement;
+  if(S.tab === 'replies' && active && ['INPUT','TEXTAREA'].includes(active.tagName)) return;
+  const views = {overview:renderOverview, replies:renderReplies, mails:renderMails, queue:renderQueue, blacklist:renderBlacklist};
+  $('main').innerHTML = views[S.tab]();
+}
+
+async function load(tab = S.tab){
+  try{
+    S.overview = await api('api/overview');
+    if(tab === 'replies') S.replies = await api('api/replies?filter=' + S.replyFilter);
+    if(tab === 'mails'){ S.mails = await api('api/mails?limit=40&q=' + encodeURIComponent(S.mailQuery)); S.mailsDone = S.mails.length < 40; }
+    if(tab === 'queue') S.queue = await api('api/queue');
+    if(tab === 'blacklist') S.blacklist = await api('api/blacklist');
+    render();
+  }catch(e){
+    $('dot').className = 'dot';
+    if(!S.overview) $('main').innerHTML = `<div class="empty">Fehler beim Laden: ${esc(e.message)}</div>`;
+  }
+}
+
+$('nav').addEventListener('click', e => {
+  const b = e.target.closest('[data-tab]'); if(!b) return;
+  S.tab = b.dataset.tab;
+  document.querySelectorAll('nav button').forEach(x => x.classList.toggle('sel', x === b));
+  window.scrollTo(0, 0);
+  $('main').innerHTML = '<div class="empty">Lade …</div>';
+  load();
+});
+
+$('main').addEventListener('click', async e => {
+  const el = e.target.closest('[data-act],[data-goto],[data-toggle],[data-rfilter],[data-send],[data-rewrite],[data-discard],[data-block],[data-unblock]');
+  if(!el) return;
+  const d = el.dataset;
+  try{
+    if(d.goto){ document.querySelector(`nav [data-tab="${d.goto}"]`).click(); return; }
+    if(d.toggle){ S.open[d.toggle] = !S.open[d.toggle]; el.closest('.item').classList.toggle('open'); return; }
+    if(d.rfilter){ S.replyFilter = d.rfilter; return load(); }
+    if(d.act === 'pause'){
+      const paused = !S.overview.paused;
+      if(!paused || confirm('Versand pausieren? Suche und Bewertung laufen weiter.')){
+        await api('api/pause', 'POST', {paused}); toast(paused ? 'Versand pausiert' : 'Versand läuft wieder'); load();
+      }
+      return;
+    }
+    if(d.act === 'search'){ await api('api/search', 'POST'); toast('Suche angefordert, der Bot startet sie gleich'); return load(); }
+    if(d.act === 'more-mails'){
+      const more = await api(`api/mails?limit=40&offset=${S.mails.length}&q=${encodeURIComponent(S.mailQuery)}`);
+      S.mails = S.mails.concat(more); S.mailsDone = more.length < 40; return render();
+    }
+    if(d.act === 'bl-add'){
+      const v = $('bl-input').value.trim(); if(!v) return;
+      await api('api/blacklist', 'POST', {value:v}); toast(`${v} gesperrt`); return load();
+    }
+    if(d.unblock){
+      if(!confirm(`${d.unblock} wieder freigeben?`)) return;
+      await api('api/blacklist/' + encodeURIComponent(d.unblock), 'DELETE'); toast('Entsperrt'); return load();
+    }
+    if(d.block){
+      if(!confirm(`${d.block} nicht anschreiben und sperren?`)) return;
+      await api(`api/companies/${encodeURIComponent(d.block)}/block`, 'POST'); toast('Aus der Warteschlange genommen'); return load();
+    }
+    if(d.send){
+      const id = d.send;
+      if(!confirm(`Antwort #${id} jetzt abschicken?`)) return;
+      S.busy[id] = 'send'; render();
+      await api(`api/replies/${id}/send`, 'POST', {subject: $('subj-' + id).value, body: $('body-' + id).value});
+      delete S.busy[id]; toast('Antwort gesendet ✓'); document.activeElement.blur(); return load();
+    }
+    if(d.rewrite){
+      const id = d.rewrite, hint = $('hint-' + id).value;
+      S.busy[id] = 'rewrite'; document.activeElement.blur(); render();
+      await api(`api/replies/${id}/rewrite`, 'POST', {hint});
+      delete S.busy[id]; toast('Neuer Vorschlag da'); return load();
+    }
+    if(d.discard){
+      if(!confirm('Verwerfen? (Du antwortest selbst oder gar nicht.)')) return;
+      await api(`api/replies/${d.discard}/discard`, 'POST'); toast('Verworfen'); return load();
+    }
+  }catch(err){
+    for(const k of Object.keys(S.busy)) delete S.busy[k];
+    toast(err.message, true); render();
+  }
+});
+
+let qTimer;
+$('main').addEventListener('input', e => {
+  if(e.target.id !== 'mail-q') return;
+  clearTimeout(qTimer);
+  qTimer = setTimeout(async () => {
+    S.mailQuery = e.target.value;
+    S.mails = await api('api/mails?limit=40&q=' + encodeURIComponent(S.mailQuery)); S.mailsDone = S.mails.length < 40;
+    const pos = e.target.selectionStart; render();
+    const inp = $('mail-q'); inp.focus(); inp.setSelectionRange(pos, pos);
+  }, 300);
+});
+$('main').addEventListener('keydown', e => { if(e.target.id === 'bl-input' && e.key === 'Enter') document.querySelector('[data-act="bl-add"]').click(); });
+
+load();
+setInterval(() => { if(S.tab === 'overview' || S.tab === 'replies') load(); }, 30000);
+document.addEventListener('visibilitychange', () => { if(!document.hidden) load(); });
+</script>
+</body>
+</html>

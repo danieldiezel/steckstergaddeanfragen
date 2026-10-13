@@ -68,7 +68,8 @@ def now() -> str:
 
 @contextmanager
 def conn():
-    c = sqlite3.connect(config.DB_PATH)
+    # timeout: Bot und Dashboard greifen gleichzeitig auf die Datenbank zu
+    c = sqlite3.connect(config.DB_PATH, timeout=15)
     c.row_factory = sqlite3.Row
     try:
         yield c
@@ -80,6 +81,7 @@ def conn():
 def init():
     with conn() as c:
         c.executescript(SCHEMA)
+        c.execute("PRAGMA journal_mode=WAL")  # gleichzeitiges Lesen (Dashboard) und Schreiben (Bot)
 
 
 # --- state ---

@@ -197,6 +197,13 @@ def main() -> None:
             now = local_now()
             ts = now.timestamp()
 
+            if db.get_state("search_requested", "0") == "1":
+                db.set_state("search_requested", "0")
+                telegram.send("🔎 Suche läuft (aus dem Dashboard gestartet) ...")
+                stats = discovery.run_discovery(profile)
+                telegram.send(f"Neue Kandidaten: {stats}")
+                db.set_state("last_discovery", ts)
+
             if ts - float(db.get_state("last_discovery", 0)) > DISCOVERY_EVERY.total_seconds():
                 discovery.run_discovery(profile)
                 db.set_state("last_discovery", ts)

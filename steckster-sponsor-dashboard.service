@@ -1,0 +1,15 @@
+[Unit]
+Description=Steckster Gadde Sponsor-Bot Dashboard
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=pi
+WorkingDirectory=/home/pi/steckstergaddeanfragen
+ExecStart=/home/pi/steckstergaddeanfragen/venv/bin/python -m web.app
+Restart=on-failure
+RestartSec=5
+
+[Install]
+WantedBy=multi-user.target

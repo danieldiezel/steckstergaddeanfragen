@@ -37,6 +37,42 @@ sudo systemctl enable --now steckster-sponsor
 
 **Testmodus:** `DRY_RUN=1` (Standard) schickt nichts raus, sondern zeigt jede Mail als Vorschau in Telegram. Wenn die Mails passen: `DRY_RUN=0` setzen und Service neu starten. Die Vorschau-Firmen wandern dann automatisch zurück in die Warteschlange.
 
+## Dashboard
+
+Handyoptimierte Oberfläche auf Port **5080**, erreichbar über das Pi-Dashboard (ÖFFNEN) und die Pi-Control-App.
+Login wie beim Pi-Dashboard.
+
+- **Übersicht:** Versandstatus (aktiv/pausiert, Test/Live), heute gesendet, Pausieren/Fortsetzen, Suche starten,
+  Kennzahlen (angeschrieben, offene Antworten, Antwortquote, Interesse, Warteschlange), Verlauf der letzten 30 Tage,
+  Firmen nach Status, welche Quellen am besten funktionieren
+- **Antworten:** Antwortvorschläge lesen, **direkt bearbeiten** und senden, mit Hinweis neu schreiben lassen, verwerfen
+- **Gesendet:** alle verschickten Mails mit Suche, Score, Begründung und Quelle
+- **Queue:** die nächsten Firmen, einzelne mit einem Tipp aus der Warteschlange nehmen
+- **Sperre:** Sperrliste ansehen, Domains/Adressen sperren und entsperren
+
+Aktionen im Dashboard werden zusätzlich in Telegram vermerkt.
+
+```bash
+cd ~/steckstergaddeanfragen
+git pull
+venv/bin/pip install -r requirements.txt
+nano .env      # DASHBOARD_AUTH_FILE auf die auth.json des Pi-Dashboards setzen (absoluter Pfad)
+sudo cp steckster-sponsor-dashboard.service /etc/systemd/system/   # User/Pfade wie beim Bot-Service prüfen
+sudo systemctl daemon-reload
+sudo systemctl enable --now steckster-sponsor-dashboard
+sudo systemctl restart steckster-sponsor    # damit "Suche starten" aus dem Dashboard greift
+```
+
+Im Pi-Dashboard in `apps.json` ergänzen (danach `generate_sudoers.py` neu ausführen):
+
+```json
+{"id": "sponsor_dashboard", "name": "Sponsor-Bot Dashboard", "service": "steckster-sponsor-dashboard.service",
+ "repo_path": "/home/pi/steckstergaddeanfragen", "url": "http://{host}:5080"}
+```
+
+Alternativ statt eigener Zeile: beim bestehenden Eintrag `steckster-sponsor` einfach `"url": "http://{host}:5080"`
+ergänzen, dann hat der Bot selbst den ÖFFNEN-Button (das Dashboard muss trotzdem als Dienst laufen).
+
 ## Telegram-Befehle
 
 | Befehl | Wirkung |
