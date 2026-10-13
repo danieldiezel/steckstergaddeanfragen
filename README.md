@@ -39,7 +39,7 @@ sudo systemctl enable --now steckster-sponsor
 
 ## Dashboard
 
-Handyoptimierte Oberfläche auf Port **5080**, erreichbar über das Pi-Dashboard (ÖFFNEN) und die Pi-Control-App.
+Handyoptimierte Oberfläche auf Port **5090**, erreichbar über das Pi-Dashboard (ÖFFNEN) und die Pi-Control-App.
 Login wie beim Pi-Dashboard.
 
 - **Übersicht:** Versandstatus (aktiv/pausiert, Test/Live), heute gesendet, Pausieren/Fortsetzen, Suche starten,
@@ -67,10 +67,10 @@ Im Pi-Dashboard in `apps.json` ergänzen (danach `generate_sudoers.py` neu ausf�
 
 ```json
 {"id": "sponsor_dashboard", "name": "Sponsor-Bot Dashboard", "service": "steckster-sponsor-dashboard.service",
- "repo_path": "/home/pi/steckstergaddeanfragen", "url": "http://{host}:5080"}
+ "repo_path": "/home/pi/steckstergaddeanfragen", "url": "http://{host}:5090"}
 ```
 
-Alternativ statt eigener Zeile: beim bestehenden Eintrag `steckster-sponsor` einfach `"url": "http://{host}:5080"`
+Alternativ statt eigener Zeile: beim bestehenden Eintrag `steckster-sponsor` einfach `"url": "http://{host}:5090"`
 ergänzen, dann hat der Bot selbst den ÖFFNEN-Button (das Dashboard muss trotzdem als Dienst laufen).
 
 ## Telegram-Befehle
