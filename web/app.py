@@ -20,7 +20,7 @@ from bot import config, db
 
 BASE_DIR = Path(__file__).resolve().parent
 PORT = config.env_int("DASHBOARD_PORT", 5090)
-AUTH_FILE = Path(os.path.expanduser(config.env("DASHBOARD_AUTH_FILE", "~/pi-dashboard/auth.json")))
+AUTH_FILE = Path(os.path.expanduser(config.env("DASHBOARD_AUTH_FILE", "~/PI_Dashboard/auth.json")))
 # Gleicher Login-Bereich wie das Pi-Dashboard -> die Pi-Control-App meldet sich automatisch an
 AUTH_REALM = "Pi Dashboard"
 
